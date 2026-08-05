@@ -114,3 +114,7 @@ been run against a real emulator core.**
 ---
 
 *Parts of this project were developed with AI assistance.*
+
+<!-- attributions:start -->
+This project is built on other people's work — see [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
+<!-- attributions:end -->
