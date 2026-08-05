@@ -1,0 +1,17 @@
+build/
+build-*/
+.DS_Store
+*.dSYM/
+
+# Cores, BIOS images and content are never committed to this repo. Not a
+# convenience rule -- see AGENTS.md. Several cores worth using carry
+# non-commercial terms, and shipping one would take this repo's MIT licence
+# with it.
+cores/
+roms/
+system/
+saves/
+*.dylib
+*.dll
+*.so
+!tools/testcore/**
