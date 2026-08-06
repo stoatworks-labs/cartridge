@@ -114,7 +114,7 @@ your own game images is likewise your responsibility.
 
 | Build | Download | Size |
 | --- | --- | --- |
-| Universal (Apple Silicon + Intel) · .zip archive | [`cartridge-0.1.0-macos-universal.zip`](https://github.com/stoatworks-labs/cartridge/releases/download/v0.1.0/cartridge-0.1.0-macos-universal.zip) | 236 KB |
+| Universal (Apple Silicon + Intel) · .zip archive | [`cartridge-0.1.0-macos-universal.zip`](https://github.com/stoatworks-labs/cartridge/releases/download/v0.1.0/cartridge-0.1.0-macos-universal.zip) | 261 KB |
 
 </details>
 
