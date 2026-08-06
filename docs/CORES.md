@@ -153,8 +153,13 @@ That log is almost always the fastest answer to "why is the layer black".
 
 ## Games
 
-Not our department, and not linked from here. Dumping cartridges you own is the
-uncontroversial route; there is also a real body of freely-licensed homebrew
+**Start with the test card in this repo** — `python3 tools/testrom/build.py`
+builds a 1 KB GBA ROM of animated test patterns, so you can confirm your core
+and your setup work before going looking for anything. It needs mGBA and no
+BIOS. See [tools/testrom/README.md](../tools/testrom/README.md).
+
+For actual games: not our department, and not linked from here. Dumping
+cartridges you own is the uncontroversial route; there is also a real body of freely-licensed homebrew
 (itch.io has a lot of it) which is genuinely well suited to this — it tends to
 be bold, high-contrast and built for a 240p raster, which is exactly what
 survives being composited and run through

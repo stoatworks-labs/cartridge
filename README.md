@@ -51,6 +51,10 @@ cmake --install build      # drops the bundle into Resolume's plugin folder
 **In process** — add `Cartridge` as a source, set **Core** to a libretro core
 (`.dylib` / `.dll`) and **Content** to a game. That is all.
 
+No game to hand? `python3 tools/testrom/build.py` builds a 1 KB GBA test card —
+animated bars, crosshatch, a sweeping edge and a checkerboard — so you can prove
+the path works without obtaining anything. It ships as source, not as a ROM.
+
 If the layer stays black, the answer is nearly always in
 `~/Library/Logs/cartridge/` — a core built for the wrong architecture or still
 carrying a quarantine flag both fail silently otherwise, and the log names which
