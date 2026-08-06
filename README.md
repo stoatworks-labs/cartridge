@@ -147,11 +147,22 @@ proper: a real ROM, a real save type, and a core an order of magnitude larger
 than the ones above. No ROM is included in this repository or distributed with
 it, and none ever will be.
 
-One thing still has not happened, and it is not a detail:
+**And it has now run inside Resolume.** In Arena 7.27.1 on macOS: added to a
+layer as a source, `InitGL` on the host's own GL 4.1 Metal context, and three
+cores loaded and swapped live on a running layer — 2048, the repo's test core,
+and mGBA. The parameter groups land in Arena's inspector as declared: Source as
+an In Process / Helper pair, Core and Content as file pickers that open in
+`~/Documents/Cartridge`, Scaling as Fit / Fill / Stretch / Integer, and the
+twelve pad buttons in their own Controller group. Picking mGBA with no ROM
+selected produced `content load failed: core mGBA requires content` in the log
+rather than a silent black layer, which is what that diagnostic is for.
 
-- **It has not been loaded into Resolume.** How the parameter groups land in
-  Arena's own inspector, and whether a controller MIDI-maps onto the pad, are
-  unconfirmed. Check it in your own rig before a show depends on it.
+One thing is still unconfirmed, and it needs hardware rather than a session:
+
+- **Whether a controller actually MIDI-maps onto the pad.** The buttons are
+  ordinary boolean parameters, so Resolume should map them like any other, but
+  nobody has put a real controller on them. Check it in your own rig before a
+  show depends on it.
 
 The macOS build is universal (Apple Silicon and Intel) and unsigned, so macOS
 warns once before it will load it. The source carries Windows and Linux
