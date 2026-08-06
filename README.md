@@ -135,16 +135,19 @@ frames through the same path the plugin uses; 2048 was played to a score of 1216
 by a scripted joypad (`--script`), which exercises input, the pixel format, the
 padded pitch and the triple buffer against code this project did not write.
 
-Two things that still have not happened, and neither is a detail:
+**A real console emulator has now been run too.** mGBA loads a GBA cartridge
+image supplied locally and runs it at the console's own 59.7275 Hz, with the
+core's log forwarded — including its own SRAM save-type detection — and 1800
+consecutive frames rendered without a drop. That exercises the emulator path
+proper: a real ROM, a real save type, and a core an order of magnitude larger
+than the ones above. No ROM is included in this repository or distributed with
+it, and none ever will be.
+
+One thing still has not happened, and it is not a detail:
 
 - **It has not been loaded into Resolume.** How the parameter groups land in
   Arena's own inspector, and whether a controller MIDI-maps onto the pad, are
-  unconfirmed.
-- **No console emulator has been run.** 2048 and gong are *game* cores, not
-  emulators — so nothing here has yet exercised a ROM, a BIOS, a save file, or
-  any core in the table above.
-
-Check it in your own rig before a show depends on it.
+  unconfirmed. Check it in your own rig before a show depends on it.
 
 The macOS build is universal (Apple Silicon and Intel) and unsigned, so macOS
 warns once before it will load it. The source carries Windows and Linux
