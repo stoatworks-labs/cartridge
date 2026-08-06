@@ -15,3 +15,9 @@ saves/
 *.dll
 *.so
 !tools/testcore/**
+
+# The test card is BUILT, never committed -- `python3 tools/testrom/build.py`.
+# Its source is MIT and ours, so this is not the licensing rule above; it is
+# that "there are no ROM binaries in this repo" is a rule worth keeping absolute
+# rather than one with an exception a reader has to check.
+tools/testrom/testcard.gba
