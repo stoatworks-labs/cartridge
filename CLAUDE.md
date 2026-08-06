@@ -27,6 +27,11 @@ which cores may be shipped. **No core, BIOS or ROM is ever committed here.**
 - The other letterbox branch: `./build/cargl --check --size 720x720`
 - A frame as a PNG: `./build/cartest --frames 20 --press 8 --out /tmp/f.png`
 - What a core says about itself: `./build/cartest --core PATH --info`
+- Footage from a real core: a joypad timeline plus a frame per PNG —
+  `./build/cartest --core PATH --script cues.txt --frames 1800 --seq /tmp/f_`
+  then `ffmpeg -nostdin -framerate 60 -i /tmp/f_%05d.png …`. `--press` holds one
+  button for the whole run, which cannot get a game off its title screen;
+  `--script` is `FRAME ID[,ID...]` per line, or `-` to release everything.
 
 ## Running the helper
 - `./build/cartridge-helper --core PATH [--content PATH] [--channel NAME]`

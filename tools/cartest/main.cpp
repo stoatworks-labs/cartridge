@@ -40,6 +40,9 @@
 
 #include <cstdio>
 #include <cstring>
+#include <fstream>
+#include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -430,6 +433,89 @@ void CheckTwoInstances( const std::string& corePath )
 			  + std::string( bOk ? "ok" : "wrong" ) );
 }
 
+/**
+    A joypad timeline, parsed from a text file.
+
+    `--press` holds one button for the whole run, which is enough to prove input
+    reaches the core and not enough to get a game off its title screen: 2048 and
+    gong both sit still until START arrives and then want a direction. Producing
+    footage from a real core needs the held set to *change*, so this maps a frame
+    number to the set of buttons held from that frame onward.
+
+        # frame  buttons
+        0        3      # START, to begin
+        6        -      # released
+        30       6      # LEFT
+
+    An entry replaces the whole held set rather than adding to it, because
+    "release everything" is the common case and expressing it as a diff is how a
+    stuck button ends up held for the rest of a recording.
+*/
+using Timeline = std::map< unsigned, std::vector< unsigned > >;
+
+bool LoadTimeline( const std::string& path, Timeline& out, std::string& error )
+{
+	std::ifstream in( path );
+	if( !in )
+	{
+		error = "could not open " + path;
+		return false;
+	}
+
+	std::string line;
+	unsigned lineNo = 0;
+
+	while( std::getline( in, line ) )
+	{
+		++lineNo;
+
+		if( const size_t hash = line.find( '#' ); hash != std::string::npos )
+			line.erase( hash );
+
+		std::istringstream fields( line );
+		unsigned frame = 0;
+		std::string buttons;
+
+		if( !( fields >> frame >> buttons ) )
+		{
+			// A blank or comment-only line is not an error; anything else is,
+			// because a silently ignored cue is a recording that does not match
+			// the script and no way to tell why.
+			if( line.find_first_not_of( " \t\r\n" ) == std::string::npos )
+				continue;
+
+			error = path + ":" + std::to_string( lineNo ) + ": expected `FRAME ID[,ID...]`";
+			return false;
+		}
+
+		std::vector< unsigned > held;
+		if( buttons != "-" )
+		{
+			std::istringstream ids( buttons );
+			std::string id;
+			while( std::getline( ids, id, ',' ) )
+			{
+				if( id.empty() )
+					continue;
+
+				try
+				{
+					held.push_back( unsigned( std::stoul( id ) ) );
+				}
+				catch( const std::exception& )
+				{
+					error = path + ":" + std::to_string( lineNo ) + ": `" + id + "` is not a button id";
+					return false;
+				}
+			}
+		}
+
+		out[ frame ] = held;
+	}
+
+	return true;
+}
+
 void Usage()
 {
 	std::printf(
@@ -439,6 +525,10 @@ void Usage()
 		"  --frames N       frames to run before checking or writing (default 8)\n"
 		"  --out PATH       write the resulting frame as a PNG\n"
 		"  --press ID       hold a joypad button id on port 0 while running\n"
+		"  --script PATH    a joypad timeline: lines of `FRAME ID[,ID...]`, or `-`\n"
+		"                   for all released. Each line replaces the held set from\n"
+		"                   that frame on. Comments start with #.\n"
+		"  --seq PREFIX     write every frame as PREFIX%%05u.png, for footage\n"
 		"  --check          run the full assertion suite against the test core\n"
 		"  --info           print what the core says about itself\n"
 		"  --list           list the checks and exit\n" );
@@ -453,6 +543,8 @@ int main( int argc, char** argv )
 	std::string corePath;
 	std::string contentPath;
 	std::string outPath;
+	std::string scriptPath;
+	std::string seqPrefix;
 	unsigned frames = 8;
 	int press       = -1;
 	bool doCheck    = false;
@@ -473,6 +565,10 @@ int main( int argc, char** argv )
 			frames = unsigned( std::stoul( next() ) );
 		else if( a == "--press" )
 			press = std::stoi( next() );
+		else if( a == "--script" )
+			scriptPath = next();
+		else if( a == "--seq" )
+			seqPrefix = next();
 		else if( a == "--check" )
 			doCheck = true;
 		else if( a == "--info" )
@@ -539,7 +635,57 @@ int main( int argc, char** argv )
 	if( press >= 0 )
 		runner.GetCore().Input().SetButton( 0, unsigned( press ), true );
 
-	runner.StepSynchronous( frames );
+	Timeline timeline;
+	if( !scriptPath.empty() && !LoadTimeline( scriptPath, timeline, error ) )
+	{
+		std::fprintf( stderr, "%s\n", error.c_str() );
+		return 1;
+	}
+
+	if( timeline.empty() && seqPrefix.empty() )
+	{
+		runner.StepSynchronous( frames );
+	}
+	else
+	{
+		// Frame at a time, because both of the things this branch exists for --
+		// changing the held buttons partway, and writing every frame -- need to
+		// happen *between* two calls into the core.
+		std::vector< unsigned > held;
+		unsigned written = 0;
+
+		for( unsigned f = 0; f < frames; ++f )
+		{
+			if( const auto cue = timeline.find( f ); cue != timeline.end() )
+			{
+				for( unsigned id : held )
+					runner.GetCore().Input().SetButton( 0, id, false );
+
+				held = cue->second;
+
+				for( unsigned id : held )
+					runner.GetCore().Input().SetButton( 0, id, true );
+			}
+
+			runner.StepSynchronous( 1 );
+
+			if( seqPrefix.empty() )
+				continue;
+
+			runner.GetCore().Frames().Acquire();
+			const Frame& shot = runner.GetCore().Frames().Current();
+			if( shot.width == 0 )
+				continue;
+
+			char name[ 1024 ];
+			std::snprintf( name, sizeof( name ), "%s%05u.png", seqPrefix.c_str(), f );
+			if( WritePng( name, shot ) )
+				++written;
+		}
+
+		if( !seqPrefix.empty() )
+			std::printf( "wrote %u frame(s) as %s#####.png\n", written, seqPrefix.c_str() );
+	}
 	runner.GetCore().Frames().Acquire();
 	const Frame& frame = runner.GetCore().Frames().Current();
 

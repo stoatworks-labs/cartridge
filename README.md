@@ -127,10 +127,24 @@ All builds, checksums and release notes: [github.com/stoatworks-labs/cartridge/r
 **v0.1.0, released for macOS.** Verified end to end against a synthetic libretro
 core built into the repo (`tools/verify.sh` — CPU host, a real GL context at two
 aspects, a real second process, and the helper killed with `SIGKILL` under a
-running consumer). **It has not yet been loaded into Resolume, and has not yet
-been run against a real emulator core.** How the parameter groups land in
-Resolume's inspector, and whether a controller MIDI-maps onto the pad, are
-unconfirmed — check it in your own rig before a show depends on it.
+running consumer).
+
+**It has since been run against real third-party cores.** `2048` and `gong` from
+the libretro buildbot both load, negotiate `SET_SUPPORT_NO_GAME`, and produce
+frames through the same path the plugin uses; 2048 was played to a score of 1216
+by a scripted joypad (`--script`), which exercises input, the pixel format, the
+padded pitch and the triple buffer against code this project did not write.
+
+Two things that still have not happened, and neither is a detail:
+
+- **It has not been loaded into Resolume.** How the parameter groups land in
+  Arena's own inspector, and whether a controller MIDI-maps onto the pad, are
+  unconfirmed.
+- **No console emulator has been run.** 2048 and gong are *game* cores, not
+  emulators — so nothing here has yet exercised a ROM, a BIOS, a save file, or
+  any core in the table above.
+
+Check it in your own rig before a show depends on it.
 
 The macOS build is universal (Apple Silicon and Intel) and unsigned, so macOS
 warns once before it will load it. The source carries Windows and Linux
