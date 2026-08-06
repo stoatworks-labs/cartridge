@@ -594,11 +594,21 @@ bool Core::OnEnvironment( unsigned cmd, void* data )
 
 	case RETRO_ENVIRONMENT_GET_VARIABLE:
 	{
-		// Core options are not exposed yet. Answering with value = nullptr is
-		// the documented way to say "no value set", and every core has to cope
-		// with it because it is what a first run looks like.
+		// Core options are not exposed yet, so there is never a value to give.
+		//
+		// This *returns false* rather than returning true with value = nullptr.
+		// Both are legal readings of the header, but they are not equally safe:
+		// a great many cores are written as
+		//
+		//     if( environ_cb( GET_VARIABLE, &var ) ) strcmp( var.value, "on" );
+		//
+		// and dereference the null the moment the call says true. fceumm and
+		// Genesis Plus GX both segfault that way, during retro_load_game, which
+		// looks exactly like a malformed ROM from the outside. Answering false
+		// makes every core fall back to its own defaults, which is what we want
+		// from a frontend that exposes no options.
 		static_cast< retro_variable* >( data )->value = nullptr;
-		return true;
+		return false;
 	}
 
 	case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE:

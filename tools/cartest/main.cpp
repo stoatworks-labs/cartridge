@@ -516,6 +516,16 @@ bool LoadTimeline( const std::string& path, Timeline& out, std::string& error )
 	return true;
 }
 
+// The directory a path sits in, or "." when there is no separator. Used for
+// the system/save directory defaults.
+std::string DirectoryOf( const std::string& path )
+{
+	if( path.empty() )
+		return ".";
+	const size_t slash = path.find_last_of( "/\\" );
+	return slash == std::string::npos ? std::string( "." ) : path.substr( 0, slash );
+}
+
 void Usage()
 {
 	std::printf(
@@ -524,6 +534,9 @@ void Usage()
 		"  --content PATH   content to load (default: none)\n"
 		"  --frames N       frames to run before checking or writing (default 8)\n"
 		"  --out PATH       write the resulting frame as a PNG\n"
+		"  --system PATH    system directory handed to the core, for BIOS and\n"
+		"                   database files (default: the content's directory)\n"
+		"  --save PATH      save directory (default: the system directory)\n"
 		"  --press ID       hold a joypad button id on port 0 while running\n"
 		"  --script PATH    a joypad timeline: lines of `FRAME ID[,ID...]`, or `-`\n"
 		"                   for all released. Each line replaces the held set from\n"
@@ -545,6 +558,8 @@ int main( int argc, char** argv )
 	std::string outPath;
 	std::string scriptPath;
 	std::string seqPrefix;
+	std::string systemDir;
+	std::string saveDir;
 	unsigned frames = 8;
 	int press       = -1;
 	bool doCheck    = false;
@@ -561,6 +576,10 @@ int main( int argc, char** argv )
 			contentPath = next();
 		else if( a == "--out" )
 			outPath = next();
+		else if( a == "--system" )
+			systemDir = next();
+		else if( a == "--save" )
+			saveDir = next();
 		else if( a == "--frames" )
 			frames = unsigned( std::stoul( next() ) );
 		else if( a == "--press" )
@@ -603,6 +622,24 @@ int main( int argc, char** argv )
 
 	Runner runner;
 	std::string error;
+
+	// A core handed a null system directory does not degrade gracefully. It is
+	// worth being specific, because all four failures look like a bad ROM:
+	//
+	//   fceumm            segfault building the path for nes.pal
+	//   Genesis Plus GX   segfault inside retro_load_game
+	//   Nestopia          retro_load_game returns false (wants NstDatabase.xml)
+	//   Mesen             retro_load_game returns false
+	//
+	// Defaulting to the content's own directory is what several cores already
+	// do for themselves, and unlike a null pointer it always exists.
+	if( systemDir.empty() )
+		systemDir = DirectoryOf( contentPath );
+	if( saveDir.empty() )
+		saveDir = systemDir;
+
+	runner.GetCore().SetSystemDirectory( systemDir );
+	runner.GetCore().SetSaveDirectory( saveDir );
 
 	if( !runner.GetCore().Load( corePath, error, /*uniqueInstance*/ true ) )
 	{
