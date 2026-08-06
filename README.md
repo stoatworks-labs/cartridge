@@ -103,13 +103,39 @@ Cores are `dlopen`ed at runtime and never redistributed, so their terms are
 between you and their authors — the same arrangement RetroArch uses. Supplying
 your own game images is likewise your responsibility.
 
+<!-- downloads:start -->
+
+## Download
+
+**[v0.1.0](https://github.com/stoatworks-labs/cartridge/releases/tag/v0.1.0)** — prebuilt for macOS. Pick your platform:
+
+<details>
+<summary><b>macOS</b> — Universal (Apple Silicon + Intel)</summary>
+
+| Build | Download | Size |
+| --- | --- | --- |
+| Universal (Apple Silicon + Intel) · .zip archive | [`cartridge-0.1.0-macos-universal.zip`](https://github.com/stoatworks-labs/cartridge/releases/download/v0.1.0/cartridge-0.1.0-macos-universal.zip) | 236 KB |
+
+</details>
+
+All builds, checksums and release notes: [github.com/stoatworks-labs/cartridge/releases](https://github.com/stoatworks-labs/cartridge/releases).
+
+<!-- downloads:end -->
+
 ## Status
 
-**v0.1.0, unreleased.** Verified end to end against a synthetic libretro core
-built into the repo (`tools/verify.sh` — CPU host, a real GL context at two
+**v0.1.0, released for macOS.** Verified end to end against a synthetic libretro
+core built into the repo (`tools/verify.sh` — CPU host, a real GL context at two
 aspects, a real second process, and the helper killed with `SIGKILL` under a
 running consumer). **It has not yet been loaded into Resolume, and has not yet
-been run against a real emulator core.**
+been run against a real emulator core.** How the parameter groups land in
+Resolume's inspector, and whether a controller MIDI-maps onto the pad, are
+unconfirmed — check it in your own rig before a show depends on it.
+
+The macOS build is universal (Apple Silicon and Intel) and unsigned, so macOS
+warns once before it will load it. The source carries Windows and Linux
+branches; **neither has been built or tested**, and no binary is published for
+either.
 
 ---
 
