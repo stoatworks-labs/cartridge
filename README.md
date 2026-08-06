@@ -1,5 +1,15 @@
 # cartridge
 
+> **AI-assisted project.** This codebase was created with [Claude](https://claude.com/claude-code)
+> (Anthropic), directed and reviewed by a human author. The macOS build is
+> verified end to end: against a synthetic libretro core, against real
+> third-party cores from the buildbot, against mGBA running a real GBA cartridge
+> image for 1800 consecutive frames, and inside Resolume Arena 7.27.1 with three
+> cores swapped live on a running layer. **The Windows and Linux branches have
+> never been built or tested**, and no binary is published for either. Whether a
+> controller MIDI-maps onto the pad is **unconfirmed** — check it in your own rig
+> before a show depends on it.
+
 **A console emulator as a live Resolume source.**
 
 `cartridge` is a [libretro](https://www.libretro.com/) frontend that runs inside
@@ -168,10 +178,6 @@ The macOS build is universal (Apple Silicon and Intel) and unsigned, so macOS
 warns once before it will load it. The source carries Windows and Linux
 branches; **neither has been built or tested**, and no binary is published for
 either.
-
----
-
-*Parts of this project were developed with AI assistance.*
 
 <!-- attributions:start -->
 This project is built on other people's work — see [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
