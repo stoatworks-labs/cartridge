@@ -67,6 +67,22 @@ path (`Core::Load( …, uniqueInstance )`). It is the only in-process answer tha
 exists. The robust answer is the helper, where separate processes have separate
 globals by construction.
 
+**`GET_VARIABLE` must return false, not true with a null value.** Core options
+are not exposed, so there is never a value to hand back. Both readings of the
+header are defensible; only one is safe. A great many cores are written as
+`if( environ_cb( GET_VARIABLE, &var ) ) strcmp( var.value, "on" );` and
+dereference the null the instant the call says true. fceumm and Genesis Plus GX
+both segfault that way *inside `retro_load_game`*, which from the outside is
+indistinguishable from a malformed ROM — the bisection went through the iNES
+header byte by byte before suspecting the frontend. Answering false makes every
+core fall back to its own defaults.
+
+**A core handed a null system directory does not degrade gracefully.** Four
+cores fail four different ways: fceumm and Genesis Plus GX segfault, Nestopia
+and Mesen return false from `retro_load_game`. `Core` has always had
+`SetSystemDirectory`; nothing called it. `cartest` now takes `--system` and
+`--save` and defaults both to the content's own directory.
+
 **`pitch` is not `width * bytesPerPixel`.** Cores hand over a framebuffer
 allocated at the console's *maximum* geometry and only partly filled, so rows are
 routinely wider than the picture. Walking it as `width * bpp` gives a picture
