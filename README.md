@@ -134,6 +134,8 @@ your own game images is likewise your responsibility.
 
 All builds, checksums and release notes: [github.com/stoatworks-labs/cartridge/releases](https://github.com/stoatworks-labs/cartridge/releases).
 
+macOS builds are signed and notarised by Apple, so they open normally — no Gatekeeper warning and no quarantine step.
+
 <!-- downloads:end -->
 
 ## Status
