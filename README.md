@@ -1,5 +1,15 @@
 # cartridge
 
+> **AI-assisted project.** This codebase was created with [Claude](https://claude.com/claude-code)
+> (Anthropic), directed and reviewed by a human author. The macOS build is
+> verified end to end: against a synthetic libretro core, against real
+> third-party cores from the buildbot, against mGBA running a real GBA cartridge
+> image for 1800 consecutive frames, and inside Resolume Arena 7.27.1 with three
+> cores swapped live on a running layer. **The Windows and Linux branches have
+> never been built or tested**, and no binary is published for either. Whether a
+> controller MIDI-maps onto the pad is **unconfirmed** — check it in your own rig
+> before a show depends on it.
+
 **A console emulator as a live Resolume source.**
 
 `cartridge` is a [libretro](https://www.libretro.com/) frontend that runs inside
@@ -111,18 +121,20 @@ your own game images is likewise your responsibility.
 
 ## Download
 
-**[v0.1.0](https://github.com/stoatworks-labs/cartridge/releases/tag/v0.1.0)** — prebuilt for macOS. Pick your platform:
+**[v0.1.1](https://github.com/stoatworks-labs/cartridge/releases/tag/v0.1.1)** — prebuilt for macOS. Pick your platform:
 
 <details>
 <summary><b>macOS</b> — Universal (Apple Silicon + Intel)</summary>
 
 | Build | Download | Size |
 | --- | --- | --- |
-| Universal (Apple Silicon + Intel) · .zip archive | [`cartridge-0.1.0-macos-universal.zip`](https://github.com/stoatworks-labs/cartridge/releases/download/v0.1.0/cartridge-0.1.0-macos-universal.zip) | 261 KB |
+| Universal (Apple Silicon + Intel) · .zip archive | [`cartridge-0.1.1-macos-universal.zip`](https://github.com/stoatworks-labs/cartridge/releases/download/v0.1.1/cartridge-0.1.1-macos-universal.zip) | 266 KB |
 
 </details>
 
 All builds, checksums and release notes: [github.com/stoatworks-labs/cartridge/releases](https://github.com/stoatworks-labs/cartridge/releases).
+
+macOS builds are signed and notarised by Apple, so they open normally — no Gatekeeper warning and no quarantine step.
 
 <!-- downloads:end -->
 
@@ -164,14 +176,10 @@ One thing is still unconfirmed, and it needs hardware rather than a session:
   nobody has put a real controller on them. Check it in your own rig before a
   show depends on it.
 
-The macOS build is universal (Apple Silicon and Intel) and unsigned, so macOS
-warns once before it will load it. The source carries Windows and Linux
-branches; **neither has been built or tested**, and no binary is published for
-either.
-
----
-
-*Parts of this project were developed with AI assistance.*
+The macOS build is universal (Apple Silicon and Intel), Developer ID-signed and
+notarised, so it opens with no Gatekeeper step. The source carries Windows and
+Linux branches; **neither has been built or tested**, and no binary is published
+for either.
 
 <!-- attributions:start -->
 This project is built on other people's work — see [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
