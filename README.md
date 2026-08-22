@@ -176,10 +176,10 @@ One thing is still unconfirmed, and it needs hardware rather than a session:
   nobody has put a real controller on them. Check it in your own rig before a
   show depends on it.
 
-The macOS build is universal (Apple Silicon and Intel) and unsigned, so macOS
-warns once before it will load it. The source carries Windows and Linux
-branches; **neither has been built or tested**, and no binary is published for
-either.
+The macOS build is universal (Apple Silicon and Intel), Developer ID-signed and
+notarised, so it opens with no Gatekeeper step. The source carries Windows and
+Linux branches; **neither has been built or tested**, and no binary is published
+for either.
 
 <!-- attributions:start -->
 This project is built on other people's work — see [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
