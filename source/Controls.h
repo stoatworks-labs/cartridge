@@ -52,6 +52,23 @@ enum ParamId : unsigned
 	PT_START,
 	PT_SELECT,
 
+	// -- The Stoatworks About block ------------------------------------------
+	//
+	// One display-only text line, then one button per link the block carries:
+	// the guide, the project page, the source, the funding page. A button opens
+	// a browser and stores nothing.
+	//
+	// How many buttons there are is decided by which URLs StoatworksAbout.h
+	// actually holds, so Plugin.cpp static_asserts this run against
+	// `about::kParamCount` -- writing a user guide later adds one, and without
+	// the assert that would silently shift PT_COUNT and leave the last button
+	// undeclared.
+	//
+	// Last in the enum so no saved composition's parameter ids shift.
+	PT_ABOUT_TEXT,
+	PT_ABOUT_BUTTON_1,
+	PT_ABOUT_BUTTON_2,
+	PT_ABOUT_BUTTON_3,
 	PT_COUNT
 };
 
