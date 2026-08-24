@@ -253,3 +253,10 @@ intended downstream — a real console through a real composite signal path),
 [nesolume](https://github.com/stoatworks-labs/nesolume) (the simulated console
 this is the genuine article for), orrery (the CMake, Diag and harness patterns
 came from there), downpour, resolume-luma-keyer.
+
+## Notes
+
+`docs/NOTES.md` carries this repo's working notes — current status, decisions
+already made, and the traps that have actually bitten. Read it before changing
+anything non-obvious. Cross-cutting fleet knowledge lives in
+[fleet-notes](https://github.com/stoatworks-labs/fleet-notes).
