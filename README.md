@@ -121,14 +121,14 @@ your own game images is likewise your responsibility.
 
 ## Download
 
-**[v0.1.0](https://github.com/stoatworks-labs/cartridge/releases/tag/v0.1.0)** — prebuilt for macOS. Pick your platform:
+**[v0.1.1](https://github.com/stoatworks-labs/cartridge/releases/tag/v0.1.1)** — prebuilt for macOS. Pick your platform:
 
 <details>
 <summary><b>macOS</b> — Universal (Apple Silicon + Intel)</summary>
 
 | Build | Download | Size |
 | --- | --- | --- |
-| Universal (Apple Silicon + Intel) · .zip archive | [`cartridge-0.1.0-macos-universal.zip`](https://github.com/stoatworks-labs/cartridge/releases/download/v0.1.0/cartridge-0.1.0-macos-universal.zip) | 261 KB |
+| Universal (Apple Silicon + Intel) · .zip archive | [`cartridge-0.1.1-macos-universal.zip`](https://github.com/stoatworks-labs/cartridge/releases/download/v0.1.1/cartridge-0.1.1-macos-universal.zip) | 266 KB |
 
 </details>
 
