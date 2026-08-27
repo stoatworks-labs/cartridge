@@ -90,6 +90,22 @@ xattr -dr com.apple.quarantine .
 
 ---
 
+## Cores that want a system directory
+
+Several cores read BIOS or database files at load time and will not start
+without somewhere to look. `cartest` defaults its system directory to the
+content's own folder and takes `--system` to override:
+
+```bash
+./build/cartest --core .../fceumm_libretro.dylib --content game.nes \
+                --system ~/Documents/Cartridge/system
+```
+
+The plugin uses `~/Documents/Cartridge/system`. Cores that need this:
+**fceumm** (`nes.pal`), **Nestopia** (`NstDatabase.xml`), **Mesen** and
+**Genesis Plus GX**. Handed nothing, the first and last segfault and the middle
+two refuse the content — all four of which look like a bad ROM.
+
 ## Which core for which system
 
 **Start with mGBA.** It is MPL-2.0, needs no BIOS, is software-rendered, and
