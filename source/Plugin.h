@@ -6,6 +6,9 @@
 
 #include <FFGLSDK.h>
 
+// After FFGLSDK.h, which is where FFUInt32 comes from.
+#include "StoatworksAboutParams.h"
+
 #include <string>
 
 /**
