@@ -140,7 +140,7 @@ macOS builds are signed and notarised by Apple, so they open normally — no Gat
 
 ## Status
 
-**v0.1.0, released for macOS.** Verified end to end against a synthetic libretro
+**v0.1.1, released for macOS** (2026-08-22). The released binary predates the GET_VARIABLE fix (777dd40), which is on `main` but not in that tag. Verified end to end against a synthetic libretro
 core built into the repo (`tools/verify.sh` — CPU host, a real GL context at two
 aspects, a real second process, and the helper killed with `SIGKILL` under a
 running consumer).
