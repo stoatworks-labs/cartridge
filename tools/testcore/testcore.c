@@ -133,7 +133,32 @@ bool retro_load_game( const struct retro_game_info* game )
 }
 
 void retro_unload_game( void ) { }
-void retro_reset( void ) { frame_count = 0; phase = 0; }
+
+/* Set for the duration of retro_run, so retro_reset can notice it was called
+   while a frame was in flight. A real core would not report this — it would
+   corrupt its own state and crash somewhere unrelated, which is exactly what
+   made the in-process Reset race hard to see. `tc_get_overlap()` is how
+   cartest asks. */
+static volatile int in_run  = 0;
+static volatile int overlap = 0;
+
+/* Exported for the test harness, not part of the libretro API. */
+static volatile int resets = 0;
+
+int tc_get_overlap( void );
+int tc_get_overlap( void ) { return overlap; }
+int tc_get_resets( void );
+int tc_get_resets( void ) { return resets; }
+
+void retro_reset( void )
+{
+	if( in_run )
+		overlap = 1;
+
+	resets++;
+	frame_count = 0;
+	phase = 0;
+}
 
 /* ------------------------------------------------------------------------- */
 
@@ -165,6 +190,8 @@ void retro_run( void )
 	unsigned n_samples = (unsigned)( TC_SAMPLERATE / TC_FPS ); /* 800 */
 	unsigned i;
 	int16_t  a_pressed;
+
+	in_run = 1;
 
 	input_poll_cb();
 
@@ -227,6 +254,8 @@ void retro_run( void )
 	audio_batch_cb( samples, n_samples );
 
 	frame_count++;
+
+	in_run = 0;
 }
 
 /* ------------------------------------------------------------------------- */

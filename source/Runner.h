@@ -69,6 +69,26 @@ public:
 	void SetPaused( bool paused ) { mPaused.store( paused, std::memory_order_relaxed ); }
 	bool IsPaused() const { return mPaused.load( std::memory_order_relaxed ); }
 
+	/**
+		Reset the core, safely, from any thread.
+
+		**Never call `GetCore().Reset()` while the thread is running.** The
+		plugin used to, straight from `SetFloatParameter` on the host's
+		parameter thread, so `retro_reset` ran concurrently with the
+		`retro_run` this thread was already inside. That is two threads in one
+		`Core` -- which `Core.h` says silently mis-routes the thread_local
+		callback routing -- and for a real emulator it is a data race on the
+		emulated CPU and memory, since `retro_reset` re-initialises the state
+		`retro_run` is executing. A core is entitled to crash on it, and in the
+		in-process build that crash is inside Resolume. Reset is also the one
+		control an operator hits mid-show.
+
+		So the request is recorded and this thread performs it between frames.
+		A reset asked for while the runner is stopped happens immediately,
+		because there is then no other thread to race with.
+	*/
+	void RequestReset();
+
 	/// 1.0 is the console's own rate. Clamped to something sane on the way in.
 	void SetSpeed( double multiplier );
 	double Speed() const { return mSpeed.load( std::memory_order_relaxed ); }
@@ -87,6 +107,7 @@ private:
 	std::atomic< bool > mRunning{ false };
 	std::atomic< bool > mQuit{ false };
 	std::atomic< bool > mPaused{ false };
+	std::atomic< bool > mResetRequested{ false };
 	std::atomic< double > mSpeed{ 1.0 };
 	std::atomic< uint64_t > mUnderruns{ 0 };
 };

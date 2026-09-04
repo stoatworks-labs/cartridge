@@ -47,6 +47,19 @@ void Runner::StepSynchronous( unsigned count )
 		mCore.RunFrame();
 }
 
+void Runner::RequestReset()
+{
+	// Nothing is running, so nothing can be inside retro_run: do it here and
+	// now rather than leaving a request nobody will consume.
+	if( !mRunning.load( std::memory_order_acquire ) )
+	{
+		mCore.Reset();
+		return;
+	}
+
+	mResetRequested.store( true, std::memory_order_release );
+}
+
 void Runner::SetSpeed( double multiplier )
 {
 	// Zero would divide by zero in the period; negative would run the clock
@@ -69,6 +82,13 @@ void Runner::ThreadMain()
 
 	while( !mQuit.load( std::memory_order_acquire ) )
 	{
+		// Before the pause check, so Reset works on a paused core — an operator
+		// who has paused and hits Reset means it. This is the only place
+		// retro_reset is ever called while the thread is alive; see
+		// Runner::RequestReset.
+		if( mResetRequested.exchange( false, std::memory_order_acq_rel ) )
+			mCore.Reset();
+
 		if( mPaused.load( std::memory_order_relaxed ) )
 		{
 			std::this_thread::sleep_for( std::chrono::milliseconds( 8 ) );

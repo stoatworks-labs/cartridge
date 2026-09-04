@@ -38,13 +38,19 @@
 
 #include <zlib.h>
 
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <map>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
+
+#if !defined( _WIN32 )
+#include <dlfcn.h>
+#endif
 
 using namespace cartridge;
 
@@ -547,6 +553,97 @@ void Usage()
 		"  --list           list the checks and exit\n" );
 }
 
+
+/**
+	Reset, hammered from another thread while the runner is free-running.
+
+	The plugin used to call `mRunner.GetCore().Reset()` straight from
+	`SetFloatParameter`, on the host's parameter thread, while the runner thread
+	was inside `retro_run`. Two threads in one Core — which Core.h says silently
+	mis-routes the thread_local callback routing — and, for a real emulator, a
+	data race on the emulated CPU and memory, since retro_reset re-initialises
+	the state retro_run is executing. fceumm and Genesis Plus GX are entitled to
+	crash on it, and in the in-process build that crash is inside Resolume.
+	Reset is also the one control an operator hits mid-show.
+
+	The test core reports the overlap rather than crashing: it holds a flag up
+	for the duration of retro_run, and retro_reset records whether it was called
+	while that flag was up. A real core would corrupt itself somewhere else
+	entirely, which is what made this hard to see.
+
+	The counters are read by opening the same library directly — Core loads it
+	with uniqueInstance off here, so this is the same image and the same statics.
+*/
+void CheckResetIsNotConcurrent( const std::string& corePath )
+{
+	void* handle = dlopen( corePath.c_str(), RTLD_NOW | RTLD_LOCAL );
+	if( handle == nullptr )
+	{
+		Fail( "reset race: could not open the test core to read its counters" );
+		return;
+	}
+
+	using CounterFn = int ( * )( void );
+	auto* overlap = reinterpret_cast< CounterFn >( dlsym( handle, "tc_get_overlap" ) );
+	auto* resets  = reinterpret_cast< CounterFn >( dlsym( handle, "tc_get_resets" ) );
+
+	if( overlap == nullptr || resets == nullptr )
+	{
+		Fail( "reset race: the test core does not export its counters" );
+		dlclose( handle );
+		return;
+	}
+
+	{
+		Runner runner;
+		std::string error;
+
+		// uniqueInstance off, so the runner drives the very image opened above.
+		if( !runner.GetCore().Load( corePath, error, /*uniqueInstance*/ false )
+			|| !runner.GetCore().LoadContent( "", error ) )
+		{
+			Fail( "reset race: could not start the core (" + error + ")" );
+			dlclose( handle );
+			return;
+		}
+
+		const int before = resets();
+		runner.Start();
+
+		// Long enough to cross many frame boundaries at the core's own rate, and
+		// asking far more often than an operator could.
+		for( int i = 0; i < 300; ++i )
+		{
+			runner.RequestReset();
+			std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
+		}
+
+		runner.Stop();
+
+		if( overlap() != 0 )
+			Fail( "reset race: retro_reset ran while retro_run was in flight" );
+		else
+			Pass( "reset never runs concurrently with a frame" );
+
+		// And it must actually have reset, not have been safe by doing nothing.
+		if( resets() > before )
+			Pass( "the requested resets did happen" );
+		else
+			Fail( "reset race: no reset took effect at all" );
+
+		// A reset asked for while stopped has no thread to defer to, so it
+		// happens there and then.
+		const int settled = resets();
+		runner.RequestReset();
+		if( resets() == settled + 1 )
+			Pass( "a reset asked for while stopped happens immediately" );
+		else
+			Fail( "reset race: a reset while stopped was dropped" );
+	}
+
+	dlclose( handle );
+}
+
 } // namespace
 
 int main( int argc, char** argv )
@@ -755,6 +852,7 @@ int main( int argc, char** argv )
 		// uses the one above.
 		CheckDeterminism( corePath );
 		CheckTwoInstances( corePath );
+		CheckResetIsNotConcurrent( corePath );
 
 		std::printf( "\n%s\n", g_failures == 0 ? "all checks passed"
 											   : ( std::to_string( g_failures ) + " check(s) failed" ).c_str() );

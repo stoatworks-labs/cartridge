@@ -66,6 +66,7 @@ add_library(cartridge_core OBJECT
     source/Core.h
     source/Core.cpp
     source/Runner.h
+    source/Paths.cpp
     source/Runner.cpp
     source/Shared.h
     source/Shared.cpp

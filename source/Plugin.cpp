@@ -1,6 +1,7 @@
 #include "Plugin.h"
 
 #include "Diag.h"
+#include "Paths.h"
 
 #include <algorithm>
 #include <cmath>
@@ -243,6 +244,27 @@ void CartridgePlugin::ApplyPendingLoad()
 	std::string error;
 	Core& core = mRunner.GetCore();
 
+	// Before Load, and before LoadContent: a core handed a null system directory
+	// does not degrade gracefully — fceumm and Genesis Plus GX segfault inside
+	// retro_load_game, which in this build means segfaulting Resolume. cartest
+	// and the helper have taken --system/--save for a while; the plugin, which
+	// is the one that runs inside the host, was still answering
+	// GET_SYSTEM_DIRECTORY with a null pointer. See source/Paths.h.
+	{
+		const auto systemDir = paths::SystemDirectory();
+		const auto saveDir   = paths::SaveDirectory();
+
+		if( paths::EnsureDirectory( systemDir ) )
+			core.SetSystemDirectory( systemDir );
+		else
+			diag::error( "could not create the system directory: " + systemDir );
+
+		if( paths::EnsureDirectory( saveDir ) )
+			core.SetSaveDirectory( saveDir );
+		else
+			diag::error( "could not create the save directory: " + saveDir );
+	}
+
 	if( mCorePath != mLoadedCorePath )
 	{
 		core.Unload();
@@ -343,7 +365,11 @@ FFResult CartridgePlugin::SetFloatParameter( unsigned int index, float value )
 			}
 			else
 			{
-				mRunner.GetCore().Reset();
+				// NOT GetCore().Reset(): this runs on the host's parameter
+				// thread while the runner thread is inside retro_run. The
+				// runner performs it between frames instead — see
+				// Runner::RequestReset.
+				mRunner.RequestReset();
 			}
 		}
 		break;
