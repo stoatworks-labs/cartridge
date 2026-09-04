@@ -21,7 +21,7 @@ static CFFGLPluginInfo PluginInfo(
 	0,                                               // Plugin major version number
 	1,                                               // Plugin minor version number
 	FF_SOURCE,                                       // Plugin type
-	"A libretro emulator core as a live source",     // Plugin description
+	"A libretro emulator core as a live source.\n\nPoint it at a core and a game and the console becomes a layer: composite it, key it, run it through other effects, and MIDI-map the joypad onto whatever controller is already on the desk.\n\nNo core, no BIOS and no game is shipped with this plugin, ever. It loads what you point it at, and that is a licensing position as much as a technical one.\n\nIt was built as a companion to old-cathode. A 240p console frame through a real composite encoder, with dot crawl and cross-colour that are consequences rather than decoration, is the thing this exists to make possible.",// Plugin description
 	"Cartridge FFGL source"                          // About
 );
 
