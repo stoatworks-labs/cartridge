@@ -105,15 +105,20 @@ if(CARTRIDGE_BUILD_TOOLS)
         set_target_properties(cartridge_testcore PROPERTIES SUFFIX ".dylib")
     endif()
 
-    # ZLIB::ZLIB, not a bare `z`. The harness writes its own PNGs and zlib does
-    # ship with macOS and Linux, but naming the library directly finds nothing
-    # on Windows -- the build fails at `#include <zlib.h>` in a test tool, long
-    # after the plugin itself has linked. find_package resolves the system copy
-    # on Unix and the vcpkg one on Windows.
-    find_package(ZLIB REQUIRED)
-    add_executable(cartest tools/cartest/main.cpp)
-    target_link_libraries(cartest PRIVATE cartridge_core ZLIB::ZLIB)
-    add_dependencies(cartest cartridge_testcore)
+    # cartest is a Unix harness and is deliberately not built on Windows.
+    # It calls dlopen/dlsym/dlclose directly, with no LoadLibrary path of its
+    # own -- unlike source/Core.cpp, which abstracts both and is why the plugin
+    # and the helper build there fine. Attempting it on Windows gets all the
+    # way past the plugin and the helper and then fails on dlclose, which reads
+    # like a broken build rather than a tool that was never portable.
+    if(NOT WIN32)
+        # ZLIB::ZLIB rather than a bare `z`: the harness writes its own PNGs,
+        # and naming the library directly leaves CMake guessing where it is.
+        find_package(ZLIB REQUIRED)
+        add_executable(cartest tools/cartest/main.cpp)
+        target_link_libraries(cartest PRIVATE cartridge_core ZLIB::ZLIB)
+        add_dependencies(cartest cartridge_testcore)
+    endif()
 endif()
 
 # ---------------------------------------------------------------------------

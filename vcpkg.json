@@ -1,14 +1,10 @@
 {
   "name": "cartridge",
   "version-string": "0.1.2",
-  "description": "Dependencies for building the Cartridge FFGL plugin. GLEW is only needed on Windows and Linux; macOS uses the system OpenGL framework, which is why that dependency is guarded. zlib is guarded the same way and for the same reason: the cartest harness writes its own PNGs through it, and it ships with macOS but not with Windows. The libretro cores the plugin loads are found at run time and are not build dependencies.",
+  "description": "Dependencies for building the Cartridge FFGL plugin. GLEW is only needed on Windows and Linux; macOS uses the system OpenGL framework, which is why the dependency is guarded. zlib is not listed: its only user is the cartest harness, which is Unix-only and not built on Windows at all. The libretro cores the plugin loads are found at run time and are not build dependencies.",
   "dependencies": [
     {
       "name": "glew",
-      "platform": "!osx"
-    },
-    {
-      "name": "zlib",
       "platform": "!osx"
     }
   ]
