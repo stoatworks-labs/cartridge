@@ -69,6 +69,7 @@ enum ParamId : unsigned
 	PT_ABOUT_BUTTON_1,
 	PT_ABOUT_BUTTON_2,
 	PT_ABOUT_BUTTON_3,
+	PT_ABOUT_BUTTON_4,
 	PT_COUNT
 };
 

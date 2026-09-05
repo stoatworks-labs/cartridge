@@ -1,8 +1,11 @@
 {
   "name": "cartridge",
-  "version-string": "0.1.1",
+  "version-string": "0.1.2",
   "description": "Dependencies for building the Cartridge FFGL plugin. GLEW is only needed on Windows and Linux; macOS uses the system OpenGL framework, which is why the dependency is guarded rather than unconditional. The libretro cores the plugin loads are found at run time and are not build dependencies.",
   "dependencies": [
-    { "name": "glew", "platform": "!osx" }
+    {
+      "name": "glew",
+      "platform": "!osx"
+    }
   ]
 }
