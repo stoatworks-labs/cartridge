@@ -5,10 +5,10 @@
 > verified end to end: against a synthetic libretro core, against real
 > third-party cores from the buildbot, against mGBA running a real GBA cartridge
 > image for 1800 consecutive frames, and inside Resolume Arena 7.27.1 with three
-> cores swapped live on a running layer. **The Windows and Linux branches have
-> never been built or tested**, and no binary is published for either. Whether a
-> controller MIDI-maps onto the pad is **unconfirmed** — check it in your own rig
-> before a show depends on it.
+> cores swapped live on a running layer. **The Windows build is compiled in CI
+> and ships as of v0.1.2, but has never been loaded into a Windows host**; the
+> Linux branch has never been built. Whether a controller MIDI-maps onto the pad
+> is **unconfirmed** — check it in your own rig before a show depends on it.
 
 **A console emulator as a live Resolume source.**
 
@@ -150,7 +150,7 @@ macOS builds are signed and notarised and open normally. The Windows builds are 
 
 ## Status
 
-**v0.1.1, released for macOS** (2026-08-22). The released binary predates the GET_VARIABLE fix (777dd40), which is on `main` but not in that tag. Verified end to end against a synthetic libretro
+**v0.1.2, released for macOS and Windows** (2026-09-05): the first release with a Windows x64 build, a disk image for macOS alongside the zip, and the GET_VARIABLE fix (777dd40) that the v0.1.1 binary predated. Verified end to end against a synthetic libretro
 core built into the repo (`tools/verify.sh` — CPU host, a real GL context at two
 aspects, a real second process, and the helper killed with `SIGKILL` under a
 running consumer).
@@ -187,9 +187,9 @@ One thing is still unconfirmed, and it needs hardware rather than a session:
   show depends on it.
 
 The macOS build is universal (Apple Silicon and Intel), Developer ID-signed and
-notarised, so it opens with no Gatekeeper step. The source carries Windows and
-Linux branches; **neither has been built or tested**, and no binary is published
-for either.
+notarised, so it opens with no Gatekeeper step. The Windows build is compiled in
+CI and ships as a zip; **nobody has loaded it into a Windows host**. The Linux
+branch has never been built, and no binary is published for it.
 
 <!-- attributions:start -->
 This project is built on other people's work — see [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
