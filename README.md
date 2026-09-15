@@ -28,6 +28,10 @@ consequences rather than decoration, is the thing this exists to make possible.
 > which core for which console, and the two macOS traps (architecture matching
 > and Gatekeeper quarantine) that otherwise cost you an afternoon.
 
+![The 2048 libretro core mid-game through the plugin's frame path: a 128 tile, a score of 2992, and a tile caught mid-slide](docs/hero.png)
+
+<sub>A real third-party libretro core through the plugin's own frame path: 2048 from the libretro buildbot, played by a scripted joypad in the offline harness (`cartest --script docs/hero-cues.txt`) to a score of 2992, the last frame written out and scaled ×3 with no filtering. Not a Resolume screen capture, and not an emulated console — the emulator path needs a ROM nobody ships here.</sub>
+
 ---
 
 ## Two builds, one frontend

@@ -107,3 +107,19 @@ waits on PR #1.
 The repo has **no CI workflows at all**, so its releases are built by hand; see
 [fleet mass release traps](https://github.com/stoatworks-labs/fleet-notes/blob/main/notes/reference_fleet_mass_release_traps.md) for the shape, including the
 `cartridge-helper` signing gap.
+
+## 2026-09-15: the hero picture
+
+`docs/hero.png` is the website's hero and thumbnail: the buildbot's `2048_libretro.dylib`
+(arm64, in `~/Documents/Cartridge/cores/`) driven by `docs/hero-cues.txt` — START at
+frame 10, then the four directions cycled three frames on, seven off — for 1500
+frames, with the last frame dumped:
+
+```
+build/cartest --core ~/Documents/Cartridge/cores/2048_libretro.dylib --frames 1500 --script docs/hero-cues.txt --out docs/hero-1x.png
+```
+
+then scaled ×3 with nearest-neighbour (the core draws 376×464). The core seeds
+its own tiles, so a rerun gives a different board and score. The website's caption
+had described this picture while the page showed the mark-only thumbnail, and the
+render is what closed that gap.
