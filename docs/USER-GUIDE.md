@@ -6,6 +6,10 @@ generator: point it at a core and a game and the console becomes a layer — com
 run it through other effects, and MIDI-map the joypad onto whatever controller is already on the
 desk.
 
+![A real third-party libretro core through the plugin's own frame path: 2048 from the libretro buildbot, played by a scripted joypad in the offline harness to …](hero.png)
+
+*A real third-party libretro core through the plugin's own frame path: 2048 from the libretro buildbot, played by a scripted joypad in the offline harness to a score of 2992, the last frame written out and scaled ×3 with no filtering. Not a Resolume screen capture, and not an emulated console.*
+
 It was built as a companion to [old-cathode](https://github.com/stoatworks-labs/old-cathode). A
 240p Mega Drive frame through a real composite encoder, with dot crawl and cross-colour that are
 consequences rather than decoration, is the thing this exists to make possible.
