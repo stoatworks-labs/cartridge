@@ -15,7 +15,7 @@
 static CFFGLPluginInfo PluginInfo(
 	PluginFactory< cartridge::CartridgePlugin >,     // Create method
 	"CG01",                                          // Plugin unique ID of maximum length 4
-	"Cartridge",                                     // Plugin name
+	"SW Cartridge",                                  // Plugin name
 	2,                                               // API major version number
 	1,                                               // API minor version number
 	0,                                               // Plugin major version number
