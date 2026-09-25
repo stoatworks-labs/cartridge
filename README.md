@@ -32,6 +32,10 @@ consequences rather than decoration, is the thing this exists to make possible.
 
 <sub>A real third-party libretro core through the plugin's own frame path: 2048 from the libretro buildbot, played by a scripted joypad in the offline harness (`cartest --script docs/hero-cues.txt`) to a score of 2992, the last frame written out and scaled ×3 with no filtering. Not a Resolume screen capture, and not an emulated console — the emulator path needs a ROM nobody ships here.</sub>
 
+[![Cartridge — a libretro console emulator as a live Resolume source](docs/video-thumb.png)](https://www.youtube.com/watch?v=K3U4ro6kL80)
+
+*[Watch it](https://www.youtube.com/watch?v=K3U4ro6kL80) — 69 seconds: a GBA test card as a layer, four cores swapped on the running layer (GBA, NES, Game Boy, Atari 2600), the joypad parameters on a controller tester, 2048 played by a cue sheet, Speed and Run, Scaling, Pixel Aspect and Smoothing, and the out-of-process helper killed while the layer holds its last frame. An FFGL source has no window, so the footage is rendered by this repository's own harness (`cargl --pipe`, driven by a cue sheet); the ROMs are our own MIT test cards from [av-test-roms](https://github.com/stoatworks-labs/av-test-roms), and no commercial game or BIOS appears.*
+
 ---
 
 ## Two builds, one frontend
