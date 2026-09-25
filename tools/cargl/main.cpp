@@ -36,12 +36,20 @@
 #include "Plugin.h"
 #include "common/Png.h"
 
+#include <algorithm>
 #include <chrono>
+#include <csignal>
+#include <cstring>
+#include <fstream>
 #include <functional>
 #include <cstdio>
+#include <map>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
+
+#include <unistd.h>
 
 using namespace cartridge;
 
@@ -323,7 +331,347 @@ void Usage()
 		"  --out PATH      write the rendered frame as a PNG\n"
 		"  --check         run the assertion suite\n"
 		"  --survive SECS  attach to a helper, keep drawing for SECS, and assert\n"
-		"                  the picture survives the helper being killed\n" );
+		"                  the picture survives the helper being killed\n"
+		"  --pipe          raw RGBA frames to stdout, paced on the wall clock:\n"
+		"                  the fleet's filming mode (see RunPipe)\n"
+		"  --fps N         --pipe frame rate (default 30)\n"
+		"  --frames N      --pipe length in frames; 0 runs until the reader hangs up\n"
+		"  --script PATH   --pipe cue sheet: `frame  Parameter Name  value` per line\n"
+		"  --set NAME=V    --pipe: a parameter's value before the first frame\n" );
+}
+
+/*
+	--pipe: raw RGBA frames out, a cue sheet in.
+
+	The fleet's filming format (copperlist's cptest, resodoom's resogl), so one
+	render script drives any plugin: `frame  Parameter Name  value` per line,
+	`#` a comment. Parameters are addressed by the NAME the inspector shows,
+	which is how Resolume addresses them too. A numeric track is held before its
+	first key and after its last and linear between, so a boolean or an option
+	is stepped with two keys a frame apart. **Core, Content and Channel are text
+	parameters**, and a text track is a path per key, applied the frame its key
+	lands on -- `210  Core  /path/to/mgba_libretro.dylib` swaps the core on the
+	running layer exactly as picking a file in the inspector would, and a value
+	of `-` clears it (a no-content core loads with none). A value only
+	reaches the plugin when it CHANGES: a re-sent path is what Resolume does on
+	composition load, and the plugin already ignores it, but Reset is an event
+	and would fire every frame.
+
+	**The frames are paced on the wall clock.** A shader plugin is a function of
+	the host's time, so its harness can hand it frame n at n/fps and render as
+	fast as the encoder takes them. This plugin is not: the core runs on its own
+	thread at the console's own rate (Runner.h), exactly as Resolume drives it,
+	so frame n is drawn at t0 + n/fps of real time and a 60 s take takes 60 s.
+	A reader slower than the frame rate holds the write and the console keeps
+	running without it -- the take skips rather than stalls, which is what an
+	overloaded Resolume would show and the reason to encode the pipe with a fast
+	preset and re-encode afterwards.
+
+	The frames get a private copy of stdout and fd 1 itself is pointed at
+	stderr, so a core that printf()s -- several do, at load -- lands in the log
+	rather than in the frame stream. Frames are written top-down (glReadPixels
+	is bottom-up). The reader hanging up before --frames have been written is
+	exit 1; with --frames 0 the take runs until then and that is exit 0. SIGPIPE
+	is ignored so the plugin is shut down either way.
+*/
+using Track = std::vector< std::pair< int, float > >;
+using TextTrack = std::vector< std::pair< int, std::string > >;
+
+struct Script
+{
+	std::map< std::string, Track >     numeric;
+	std::map< std::string, TextTrack > text;
+};
+
+bool IsTextParam( unsigned type )
+{
+	return type == FF_TYPE_TEXT || type == FF_TYPE_FILE;
+}
+
+Script LoadScript( const std::string& path, const std::map< std::string, unsigned >& types,
+				   std::string& error )
+{
+	Script        script;
+	std::ifstream file( path );
+	if( !file )
+	{
+		error = "cannot open " + path;
+		return script;
+	}
+	std::string line;
+	int         lineNumber = 0;
+	while( std::getline( file, line ) )
+	{
+		++lineNumber;
+		const size_t hash = line.find( '#' );
+		if( hash != std::string::npos )
+			line.erase( hash );
+		std::istringstream in( line );
+		int                frame = 0;
+		if( !( in >> frame ) )
+			continue;
+		std::vector< std::string > words;
+		std::string                word;
+		while( in >> word )
+			words.push_back( word );
+		const std::string where =
+			path + ":" + std::to_string( lineNumber ) + ": expected `frame Parameter Name value`";
+		if( words.size() < 2 )
+		{
+			error = where;
+			return {};
+		}
+
+		// The longest prefix of the words that names a parameter is the name;
+		// the rest is the value. A text value may itself contain spaces (a
+		// path), a numeric one is one word.
+		std::string name, value;
+		bool        found = false;
+		for( size_t n = words.size() - 1; n >= 1 && !found; --n )
+		{
+			std::string candidate;
+			for( size_t i = 0; i < n; ++i )
+				candidate += ( i ? " " : "" ) + words[ i ];
+			if( types.count( candidate ) )
+			{
+				name  = candidate;
+				found = true;
+				for( size_t i = n; i < words.size(); ++i )
+					value += ( i > n ? " " : "" ) + words[ i ];
+			}
+		}
+		if( !found )
+		{
+			error = path + ":" + std::to_string( lineNumber )
+					+ ": no automatable parameter named by \"" + line + "\"";
+			return {};
+		}
+		if( IsTextParam( types.at( name ) ) )
+			// `-` is the empty string: `Content -` clears the content so a
+			// no-content core (2048, gong) loads with none, as the inspector's
+			// cleared file picker would.
+			script.text[ name ].emplace_back( frame, value == "-" ? std::string() : value );
+		else
+			script.numeric[ name ].emplace_back( frame, std::strtof( value.c_str(), nullptr ) );
+	}
+	for( auto& entry : script.numeric )
+		std::sort( entry.second.begin(), entry.second.end() );
+	for( auto& entry : script.text )
+		std::stable_sort( entry.second.begin(), entry.second.end(),
+						  []( const auto& a, const auto& b ) { return a.first < b.first; } );
+	return script;
+}
+
+float ValueAt( const Track& track, int frame )
+{
+	if( track.empty() )
+		return 0.0f;
+	if( frame <= track.front().first )
+		return track.front().second;
+	if( frame >= track.back().first )
+		return track.back().second;
+	for( size_t i = 1; i < track.size(); ++i )
+		if( frame <= track[ i ].first )
+		{
+			const auto& a    = track[ i - 1 ];
+			const auto& b    = track[ i ];
+			const float span = float( b.first - a.first );
+			const float t    = span > 0.0f ? float( frame - a.first ) / span : 1.0f;
+			return a.second + ( b.second - a.second ) * t;
+		}
+	return track.back().second;
+}
+
+/// A text track holds its last key at or before `frame`; nothing before the first.
+const std::string* TextAt( const TextTrack& track, int frame )
+{
+	const std::string* current = nullptr;
+	for( const auto& key : track )
+		if( key.first <= frame )
+			current = &key.second;
+	return current;
+}
+
+struct PipeOptions
+{
+	int         frames = 0; ///< 0: until the reader hangs up
+	double      fps    = 30.0;
+	std::string script;
+	std::vector< std::pair< std::string, std::string > > sets;
+};
+
+bool WriteAll( int fd, const uint8_t* data, size_t bytes )
+{
+	size_t written = 0;
+	while( written < bytes )
+	{
+		const ssize_t put = write( fd, data + written, bytes - written );
+		if( put <= 0 )
+			return false;
+		written += size_t( put );
+	}
+	return true;
+}
+
+int RunPipe( const std::string& corePath, const std::string& contentPath, unsigned vw, unsigned vh,
+			 const PipeOptions& o )
+{
+	std::signal( SIGPIPE, SIG_IGN );
+	if( vw == 0 || vh == 0 || !( o.fps > 0.0 ) )
+	{
+		std::fprintf( stderr, "cargl: --pipe needs a positive size and --fps\n" );
+		return 1;
+	}
+
+	const int frameFd = dup( STDOUT_FILENO );
+	dup2( STDERR_FILENO, STDOUT_FILENO );
+	if( frameFd < 0 )
+	{
+		std::fprintf( stderr, "cargl: cannot take stdout for the frames\n" );
+		return 1;
+	}
+
+	CGLContextObj context = MakeContext();
+	if( context == nullptr )
+	{
+		std::fprintf( stderr, "cargl: could not create a GL 4.1 core context\n" );
+		return 1;
+	}
+	Target target = MakeTarget( vw, vh );
+
+	CartridgePlugin plugin;
+
+	// Names to ids and types: everything before the About block. An About
+	// button that "moved" would open a browser.
+	std::map< std::string, unsigned > byName;
+	std::map< std::string, unsigned > typeByName;
+	for( unsigned id = 0; id < PT_ABOUT_TEXT; ++id )
+		if( const char* name = plugin.GetParamName( id ) )
+		{
+			byName[ name ]     = id;
+			typeByName[ name ] = plugin.GetParamType( id );
+		}
+
+	std::map< unsigned, float >       lastNumeric;
+	std::map< unsigned, std::string > lastText;
+
+	auto setText = [ & ]( unsigned id, const std::string& value ) {
+		const auto seen = lastText.find( id );
+		if( seen != lastText.end() && seen->second == value )
+			return;
+		plugin.SetTextParameter( id, value.c_str() );
+		lastText[ id ] = value;
+	};
+	auto setNumeric = [ & ]( unsigned id, float value ) {
+		const auto seen = lastNumeric.find( id );
+		if( seen != lastNumeric.end() && seen->second == value )
+			return;
+		plugin.SetFloatParameter( id, value );
+		lastNumeric[ id ] = value;
+	};
+
+	Script script;
+	if( !o.script.empty() )
+	{
+		std::string error;
+		script = LoadScript( o.script, typeByName, error );
+		if( !error.empty() )
+		{
+			std::fprintf( stderr, "cargl: %s\n", error.c_str() );
+			return 1;
+		}
+	}
+
+	auto apply = [ & ]( int frame ) {
+		for( const auto& track : script.text )
+			if( const std::string* value = TextAt( track.second, frame ) )
+				setText( byName.at( track.first ), *value );
+		for( const auto& track : script.numeric )
+			setNumeric( byName.at( track.first ), ValueAt( track.second, frame ) );
+	};
+
+	FFGLViewportStruct vp = {};
+	vp.width              = vw;
+	vp.height             = vh;
+	if( plugin.InitGL( &vp ) != FF_SUCCESS )
+	{
+		std::fprintf( stderr, "cargl: InitGL failed -- shader did not build\n" );
+		return 1;
+	}
+
+	// The command line's core and content first, then --set, then frame 0 of
+	// the sheet, so the sheet can override either and the take opens on the
+	// game rather than restarting it a frame in.
+	if( !corePath.empty() )
+		setText( PT_CORE, corePath );
+	if( !contentPath.empty() )
+		setText( PT_CONTENT, contentPath );
+	for( const auto& kv : o.sets )
+	{
+		const auto found = byName.find( kv.first );
+		if( found == byName.end() )
+		{
+			std::fprintf( stderr, "cargl: no parameter named '%s'\n", kv.first.c_str() );
+			plugin.DeInitGL();
+			return 1;
+		}
+		if( IsTextParam( typeByName.at( kv.first ) ) )
+			setText( found->second, kv.second );
+		else
+			setNumeric( found->second, float( std::atof( kv.second.c_str() ) ) );
+	}
+	apply( 0 );
+
+	// The take starts when the console reaches the screen, not while the core
+	// is still loading: Resolume would show black there, and nobody films that.
+	// A core whose opening frames really are black (a console booting) is not a
+	// failure, so this waits a few seconds and then films whatever is there.
+	{
+		const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds( 5 );
+		while( std::chrono::steady_clock::now() < deadline )
+		{
+			const auto rgba = DrawOnce( plugin, target );
+			bool       lit  = false;
+			for( size_t i = 0; i + 3 < rgba.size() && !lit; i += 4 )
+				lit = rgba[ i ] || rgba[ i + 1 ] || rgba[ i + 2 ];
+			if( lit )
+				break;
+			std::this_thread::sleep_for( std::chrono::milliseconds( 16 ) );
+		}
+	}
+
+	const size_t           rowBytes = size_t( vw ) * 4;
+	std::vector< uint8_t > frame( rowBytes * vh );
+	int                    status = 0;
+
+	const auto t0 = std::chrono::steady_clock::now();
+	for( int f = 0; o.frames <= 0 || f < o.frames; ++f )
+	{
+		apply( f );
+
+		// Real time, not the frame counter: the console's clock is the wall's.
+		std::this_thread::sleep_until(
+			t0 + std::chrono::duration_cast< std::chrono::steady_clock::duration >(
+					 std::chrono::duration< double >( double( f ) / o.fps ) ) );
+
+		const auto rgba = DrawOnce( plugin, target );
+		for( unsigned y = 0; y < vh; ++y )
+			std::memcpy( frame.data() + size_t( y ) * rowBytes,
+						 rgba.data() + size_t( vh - 1 - y ) * rowBytes, rowBytes );
+
+		if( !WriteAll( frameFd, frame.data(), frame.size() ) )
+		{
+			// The reader hung up. Short of a requested length that is a
+			// failure the pipeline should see; "until then" is exit 0.
+			status = o.frames > 0 ? 1 : 0;
+			break;
+		}
+	}
+
+	plugin.DeInitGL();
+	CGLSetCurrentContext( nullptr );
+	CGLDestroyContext( context );
+	return status;
 }
 
 } // namespace
@@ -338,14 +686,35 @@ int main( int argc, char** argv )
 	std::string helperChannel;
 	unsigned vw = 1280, vh = 720;
 	bool doCheck       = false;
+	bool doPipe        = false;
 	int surviveSeconds = 0;
+	PipeOptions pipe;
 
 	for( int i = 1; i < argc; ++i )
 	{
 		const std::string a = argv[ i ];
 		auto next           = [ & ]() -> std::string { return ( i + 1 < argc ) ? argv[ ++i ] : ""; };
 
-		if( a == "--core" )
+		if( a == "--pipe" )
+			doPipe = true;
+		else if( a == "--fps" )
+			pipe.fps = std::atof( next().c_str() );
+		else if( a == "--frames" )
+			pipe.frames = std::atoi( next().c_str() );
+		else if( a == "--script" )
+			pipe.script = next();
+		else if( a == "--set" )
+		{
+			const std::string kv     = next();
+			const size_t      equals = kv.find( '=' );
+			if( equals == std::string::npos )
+			{
+				Usage();
+				return 2;
+			}
+			pipe.sets.emplace_back( kv.substr( 0, equals ), kv.substr( equals + 1 ) );
+		}
+		else if( a == "--core" )
 			corePath = next();
 		else if( a == "--helper" )
 			helperChannel = next();
@@ -373,6 +742,11 @@ int main( int argc, char** argv )
 			return ( a == "--help" || a == "-h" ) ? 0 : 2;
 		}
 	}
+
+	if( doPipe )
+		// No default core: the sheet's frame 0 may name one, and the test core
+		// is nothing anyone films.
+		return RunPipe( corePath, contentPath, vw, vh, pipe );
 
 	if( corePath.empty() )
 		corePath = TestCorePath( argv[ 0 ] );
