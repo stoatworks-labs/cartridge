@@ -158,6 +158,10 @@ macOS builds are signed and notarised and open normally. The Windows builds are 
 
 ## Status
 
+**v0.1.3** (2026-10-06) lists the plugin as *SW Cartridge* in the host's browser, as
+every Stoatworks plugin now is, and drops zlib from the Windows build's dependencies (only the
+Unix-only test harness used it). Nothing else changed.
+
 **v0.1.2, released for macOS and Windows** (2026-09-05): the first release with a Windows x64 build, a disk image for macOS alongside the zip, and the GET_VARIABLE fix (777dd40) that the v0.1.1 binary predated. Verified end to end against a synthetic libretro
 core built into the repo (`tools/verify.sh` — CPU host, a real GL context at two
 aspects, a real second process, and the helper killed with `SIGKILL` under a
