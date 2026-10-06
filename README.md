@@ -129,15 +129,15 @@ your own game images is likewise your responsibility.
 
 ## Download
 
-**[v0.1.2](https://github.com/stoatworks-labs/cartridge/releases/tag/v0.1.2)** — prebuilt for macOS and Windows. Pick your platform:
+**[v0.1.3](https://github.com/stoatworks-labs/cartridge/releases/tag/v0.1.3)** — prebuilt for macOS and Windows. Pick your platform:
 
 <details>
 <summary><b>macOS</b> — Universal (Apple Silicon + Intel)</summary>
 
 | Build | Download | Size |
 | --- | --- | --- |
-| Universal (Apple Silicon + Intel) · .dmg disk image | [`cartridge-0.1.2-macos-universal.dmg`](https://github.com/stoatworks-labs/cartridge/releases/download/v0.1.2/cartridge-0.1.2-macos-universal.dmg) | 549 KB |
-| Universal (Apple Silicon + Intel) · .zip archive | [`cartridge-0.1.2-macos-universal.zip`](https://github.com/stoatworks-labs/cartridge/releases/download/v0.1.2/cartridge-0.1.2-macos-universal.zip) | 270 KB |
+| Universal (Apple Silicon + Intel) · .dmg disk image | [`cartridge-0.1.3-macos-universal.dmg`](https://github.com/stoatworks-labs/cartridge/releases/download/v0.1.3/cartridge-0.1.3-macos-universal.dmg) | 551 KB |
+| Universal (Apple Silicon + Intel) · .zip archive | [`cartridge-0.1.3-macos-universal.zip`](https://github.com/stoatworks-labs/cartridge/releases/download/v0.1.3/cartridge-0.1.3-macos-universal.zip) | 271 KB |
 
 </details>
 
@@ -146,7 +146,7 @@ your own game images is likewise your responsibility.
 
 | Build | Download | Size |
 | --- | --- | --- |
-| x64 · .zip archive | [`cartridge-0.1.2-windows-x86_64.zip`](https://github.com/stoatworks-labs/cartridge/releases/download/v0.1.2/cartridge-0.1.2-windows-x86_64.zip) | 172 KB |
+| x64 · .zip archive | [`cartridge-0.1.3-windows-x86_64.zip`](https://github.com/stoatworks-labs/cartridge/releases/download/v0.1.3/cartridge-0.1.3-windows-x86_64.zip) | 173 KB |
 
 </details>
 
