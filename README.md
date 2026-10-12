@@ -1,47 +1,46 @@
 # cartridge
 
 > **AI-assisted project.** This codebase was created with [Claude](https://claude.com/claude-code)
-> (Anthropic), directed and reviewed by a human author. The macOS build is
-> verified end to end: against a synthetic libretro core, against real
-> third-party cores from the buildbot, against mGBA running a real GBA cartridge
-> image for 1800 consecutive frames, and inside Resolume Arena 7.27.1 with three
-> cores swapped live on a running layer. **The Windows build is compiled in CI
-> and ships as of v0.1.2, but has never been loaded into a Windows host**; the
-> Linux branch has never been built. Whether a controller MIDI-maps onto the pad
-> is **unconfirmed** — check it in your own rig before a show depends on it.
+> (Anthropic), directed and reviewed by a human author. The macOS build has been checked end to
+> end, from a synthetic core up through real third-party cores and mGBA running a real GBA
+> cartridge image, to Resolume Arena 7.27.1 with cores swapped live on a running layer. **The Windows
+> build is compiled in CI and ships as of v0.1.2, but has never been loaded into a Windows
+> host**, and the Linux branch has never been built. Whether a controller MIDI-maps onto the
+> pad is **unconfirmed**, so check it in your own rig before a show depends on it. The details
+> are in the Status section further down.
 
 **A console emulator as a live Resolume source.**
 
-`cartridge` is a [libretro](https://www.libretro.com/) frontend that runs inside
-Resolume Arena/Avenue as an FFGL generator. Point it at a core and a game and the
-console becomes a layer — composite it, key it, run it through other effects, and
-MIDI-map the joypad onto whatever controller is already on the desk.
+`cartridge` is a [libretro](https://www.libretro.com/) frontend that runs inside Resolume
+Arena/Avenue as an FFGL generator. Point it at a core and a game and the console becomes a
+layer: composite it, key it, run it through other effects, and MIDI-map the joypad onto
+whatever controller is already on the desk.
 
-It was built as a companion to
-[old-cathode](https://github.com/stoatworks-labs/old-cathode). A 240p Mega Drive
-frame through a real composite encoder, with dot crawl and cross-colour that are
-consequences rather than decoration, is the thing this exists to make possible.
+I built it as a companion to [old-cathode](https://github.com/stoatworks-labs/old-cathode).
+Putting a 240p Mega Drive frame through a real composite encoder, with dot crawl and
+cross-colour that come from the encoding rather than being painted on, is what this was made
+for.
 
 > **No emulator core, BIOS image or game is included, and none ever will be.**
-> You supply your own, exactly as you would with RetroArch.
-> **[docs/CORES.md](docs/CORES.md) is how to get them** — where to download,
-> which core for which console, and the two macOS traps (architecture matching
-> and Gatekeeper quarantine) that otherwise cost you an afternoon.
+> You supply your own, the same as you would with RetroArch.
+> **[docs/CORES.md](docs/CORES.md) is how to get them**: where to download, which core for
+> which console, and the two macOS traps (architecture matching and Gatekeeper quarantine)
+> that will otherwise cost you an afternoon.
 
 ![The 2048 libretro core mid-game through the plugin's frame path: a 128 tile, a score of 2992, and a tile caught mid-slide](docs/hero.png)
 
-<sub>A real third-party libretro core through the plugin's own frame path: 2048 from the libretro buildbot, played by a scripted joypad in the offline harness (`cartest --script docs/hero-cues.txt`) to a score of 2992, the last frame written out and scaled ×3 with no filtering. Not a Resolume screen capture, and not an emulated console — the emulator path needs a ROM nobody ships here.</sub>
+<sub>A real third-party libretro core through the plugin's own frame path: 2048 from the libretro buildbot, played by a scripted joypad in the offline harness (`cartest --script docs/hero-cues.txt`) to a score of 2992, with the last frame written out and scaled ×3 with no filtering. It isn't a Resolume screen capture, and it isn't an emulated console either, because the emulator path needs a ROM and nobody ships one here.</sub>
 
 [![Cartridge — a libretro console emulator as a live Resolume source](docs/video-thumb.png)](https://www.youtube.com/watch?v=K3U4ro6kL80)
 
-*[Watch it](https://www.youtube.com/watch?v=K3U4ro6kL80) — 69 seconds: a GBA test card as a layer, four cores swapped on the running layer (GBA, NES, Game Boy, Atari 2600), the joypad parameters on a controller tester, 2048 played by a cue sheet, Speed and Run, Scaling, Pixel Aspect and Smoothing, and the out-of-process helper killed while the layer holds its last frame. An FFGL source has no window, so the footage is rendered by this repository's own harness (`cargl --pipe`, driven by a cue sheet); the ROMs are our own MIT test cards from [av-test-roms](https://github.com/stoatworks-labs/av-test-roms), and no commercial game or BIOS appears.*
+*[Watch it](https://www.youtube.com/watch?v=K3U4ro6kL80) (69 seconds): a GBA test card as a layer, four cores swapped on the running layer (GBA, NES, Game Boy, Atari 2600), the joypad parameters on a controller tester, 2048 played by a cue sheet, Speed and Run, Scaling, Pixel Aspect and Smoothing, and the out-of-process helper killed while the layer holds its last frame. An FFGL source doesn't have a window to film, so the footage comes from this repo's own harness (`cargl --pipe`, driven by a cue sheet). The ROMs are my own MIT test cards from [av-test-roms](https://github.com/stoatworks-labs/av-test-roms), and no commercial game or BIOS appears.*
 
 ---
 
 ## Two builds, one frontend
 
-The same emulator frontend ships twice, differing only in which process the core
-runs in. Which one you want depends on what happens if a core crashes.
+The same emulator frontend ships twice, and the only difference is which process the core
+runs in. Which one you want depends on what you'd like to happen when a core crashes.
 
 |                    | **In process** (the plugin)     | **Out of process** (the helper)      |
 | ------------------ | ------------------------------- | ------------------------------------ |
@@ -66,19 +65,18 @@ cmake --install build      # drops the bundle into Resolume's plugin folder
 
 ## Using it
 
-**In process** — add `Cartridge` as a source, set **Core** to a libretro core
-(`.dylib` / `.dll`) and **Content** to a game. That is all.
+**In process**: add `Cartridge` as a source, set **Core** to a libretro core
+(`.dylib` / `.dll`) and **Content** to a game. That's it.
 
-No game to hand? `python3 tools/testrom/build.py` builds a 1 KB GBA test card —
-animated bars, crosshatch, a sweeping edge and a checkerboard — so you can prove
-the path works without obtaining anything. It ships as source, not as a ROM.
+No game to hand? `python3 tools/testrom/build.py` builds a 1 KB GBA test card (animated
+bars, crosshatch, a sweeping edge and a checkerboard), so you can prove the path works
+without having to get hold of anything. It ships as source, not as a ROM.
 
-If the layer stays black, the answer is nearly always in
-`~/Library/Logs/cartridge/` — a core built for the wrong architecture or still
-carrying a quarantine flag both fail silently otherwise, and the log names which
-one and how to fix it.
+If the layer stays black, the answer's nearly always in `~/Library/Logs/cartridge/`. A core
+built for the wrong architecture and a core still carrying a quarantine flag both fail
+silently otherwise, and the log tells you which it is and how to fix it.
 
-**Out of process** — start the helper, then point the plugin at it:
+**Out of process**: start the helper, then point the plugin at it:
 
 ```bash
 ./build/cartridge-helper --core /path/to/mgba_libretro.dylib --content game.gba
@@ -90,40 +88,40 @@ Set the plugin's **Source** to `Helper` and leave **Channel** at `default`.
 
 **Source**, **Core**, **Content**, **Channel**, **Run**, **Reset**, **Speed**
 (¼× to 4×, centred on the console's own rate), **Scaling** (Fit / Fill / Stretch
-/ Integer), **Pixel Aspect**, **Smoothing** — plus twelve pad buttons in a
+/ Integer), **Pixel Aspect** and **Smoothing**, plus twelve pad buttons in a
 **Controller** group.
 
-The buttons are ordinary boolean parameters, which means Resolume will MIDI-map
-them, keyboard-map them and automate them off the timeline with no help from us.
-A hardware controller becomes a joypad, and a game can be keyframed as a visual.
+The buttons are ordinary boolean parameters, which means Resolume will MIDI-map them,
+keyboard-map them and automate them off the timeline without any help from me. A hardware
+controller becomes a joypad, and you can keyframe a game as a visual.
 
-**Integer** scaling and **Smoothing** off is the combination you want for pixel
-art. **Pixel Aspect** honours the core's declared display aspect — 320×224 on a
-Mega Drive is a 4:3 picture, and showing it 1:1 makes it visibly too tall.
+**Integer** scaling and **Smoothing** off is the combination you want for pixel art.
+**Pixel Aspect** honours the core's declared display aspect: 320×224 on a Mega Drive is a
+4:3 picture, and showing it 1:1 makes it visibly too tall.
 
 ## What it does not do
 
-- **Hardware-rendered cores are refused.** Dolphin, Flycast and friends need a
-  GL context and an FBO on the emulator thread; giving them a half-kept promise
-  makes them render into Resolume's own framebuffer. Software cores only — NES,
-  SNES, Mega Drive, Master System, Game Boy, GBA, PC Engine.
-- **There is no audio.** FFGL gives a plugin no way to hand audio to the host,
-  so the samples are decoded and dropped. Sound from our own device would not be
-  on Resolume's clock or in its mixer, which is worse than silence for a show.
+- **Hardware-rendered cores are refused.** Dolphin, Flycast and friends need a GL context
+  and an FBO on the emulator thread, and giving them a half-kept promise makes them render
+  into Resolume's own framebuffer. It's software cores only: NES, SNES, Mega Drive, Master
+  System, Game Boy, GBA, PC Engine.
+- **There's no audio.** FFGL doesn't give a plugin any way to hand audio to the host, so
+  the samples are decoded and dropped. Sound sent out of the plugin's own audio device
+  wouldn't be on Resolume's clock or in its mixer, and for a show that's worse than silence.
 - **No core options and no save states** yet.
 
 ## Licensing
 
-`cartridge` is MIT. **Emulator cores are not**, and that is why none are bundled:
+`cartridge` is MIT. **Emulator cores are not**, and that's why none are bundled:
 
-- **mGBA** is MPL-2.0 — permissive.
+- **mGBA** is MPL-2.0, which is permissive.
 - **Genesis Plus GX** is under a **non-commercial** licence.
 - Several cores in the Snes9x lineage carry custom non-commercial terms.
 - **Dolphin** and **VBA-M** are GPL.
 
-Cores are `dlopen`ed at runtime and never redistributed, so their terms are
-between you and their authors — the same arrangement RetroArch uses. Supplying
-your own game images is likewise your responsibility.
+Cores are `dlopen`ed at runtime and never redistributed, so their terms are between you and
+their authors, which is the same arrangement RetroArch uses. Supplying your own game images
+is your responsibility too.
 
 <!-- downloads:start -->
 
@@ -162,46 +160,44 @@ macOS builds are signed and notarised and open normally. The Windows builds are 
 every Stoatworks plugin now is, and drops zlib from the Windows build's dependencies (only the
 Unix-only test harness used it). Nothing else changed.
 
-**v0.1.2, released for macOS and Windows** (2026-09-05): the first release with a Windows x64 build, a disk image for macOS alongside the zip, and the GET_VARIABLE fix (777dd40) that the v0.1.1 binary predated. Verified end to end against a synthetic libretro
-core built into the repo (`tools/verify.sh` — CPU host, a real GL context at two
-aspects, a real second process, and the helper killed with `SIGKILL` under a
-running consumer).
+**v0.1.2, released for macOS and Windows** (2026-09-05): the first release with a Windows x64
+build, a disk image for macOS alongside the zip, and the GET_VARIABLE fix (777dd40) that the
+v0.1.1 binary predated. It's checked end to end against a synthetic libretro core built into
+the repo (`tools/verify.sh`: CPU host, a real GL context at two aspects, a real second
+process, and the helper killed with `SIGKILL` under a running consumer).
 
-**It has since been run against real third-party cores.** `2048` and `gong` from
-the libretro buildbot both load, negotiate `SET_SUPPORT_NO_GAME`, and produce
-frames through the same path the plugin uses; 2048 was played to a score of 1216
-by a scripted joypad (`--script`), which exercises input, the pixel format, the
-padded pitch and the triple buffer against code this project did not write.
+**It's since been run against real third-party cores.** `2048` and `gong` from the libretro
+buildbot both load, negotiate `SET_SUPPORT_NO_GAME`, and produce frames through the same path
+the plugin uses. A scripted joypad (`--script`) played 2048 to a score of 1216. That
+exercises input, the pixel format, the padded pitch and the triple buffer against code this
+project didn't write.
 
-**A real console emulator has now been run too.** mGBA loads a GBA cartridge
-image supplied locally and runs it at the console's own 59.7275 Hz, with the
-core's log forwarded — including its own SRAM save-type detection — and 1800
-consecutive frames rendered without a drop. That exercises the emulator path
-proper: a real ROM, a real save type, and a core an order of magnitude larger
-than the ones above. No ROM is included in this repository or distributed with
-it, and none ever will be.
+**A real console emulator has been run too.** mGBA loads a GBA cartridge image supplied
+locally and runs it at the console's own 59.7275 Hz, with the core's log forwarded
+(including its own SRAM save-type detection) and 1800 consecutive frames rendered without a
+drop. That exercises the emulator path proper: a real ROM, a real save type, and a core an
+order of magnitude bigger than the ones above. No ROM is included in this repo or
+distributed with it, and none ever will be.
 
-**And it has now run inside Resolume.** In Arena 7.27.1 on macOS: added to a
-layer as a source, `InitGL` on the host's own GL 4.1 Metal context, and three
-cores loaded and swapped live on a running layer — 2048, the repo's test core,
-and mGBA. The parameter groups land in Arena's inspector as declared: Source as
-an In Process / Helper pair, Core and Content as file pickers that open in
-`~/Documents/Cartridge`, Scaling as Fit / Fill / Stretch / Integer, and the
-twelve pad buttons in their own Controller group. Picking mGBA with no ROM
-selected produced `content load failed: core mGBA requires content` in the log
-rather than a silent black layer, which is what that diagnostic is for.
+**And it's run inside Resolume.** In Arena 7.27.1 on macOS it was added to a layer as a
+source, ran `InitGL` on the host's own GL 4.1 Metal context, and had three cores loaded and
+swapped live on a running layer: 2048, the repo's test core, and mGBA. The parameter groups
+land in Arena's inspector as declared: Source as an In Process / Helper pair, Core and
+Content as file pickers that open in `~/Documents/Cartridge`, Scaling as Fit / Fill /
+Stretch / Integer, and the twelve pad buttons in their own Controller group. Picking mGBA
+with no ROM selected put `content load failed: core mGBA requires content` in the log rather
+than leaving a silent black layer, which is what that diagnostic is there for.
 
-One thing is still unconfirmed, and it needs hardware rather than a session:
+One thing's still unconfirmed, and it needs hardware rather than a session:
 
-- **Whether a controller actually MIDI-maps onto the pad.** The buttons are
-  ordinary boolean parameters, so Resolume should map them like any other, but
-  nobody has put a real controller on them. Check it in your own rig before a
-  show depends on it.
+- **Whether a controller actually MIDI-maps onto the pad.** The buttons are ordinary boolean
+  parameters, so Resolume should map them like any other, but nobody's put a real controller
+  on them yet. Check it in your own rig before a show depends on it.
 
-The macOS build is universal (Apple Silicon and Intel), Developer ID-signed and
-notarised, so it opens with no Gatekeeper step. The Windows build is compiled in
-CI and ships as a zip; **nobody has loaded it into a Windows host**. The Linux
-branch has never been built, and no binary is published for it.
+The macOS build is universal (Apple Silicon and Intel), Developer ID-signed and notarised, so
+it opens without a Gatekeeper step. The Windows build is compiled in CI and ships as a zip,
+but **nobody has loaded it into a Windows host**. The Linux branch has never been built, and
+there's no binary published for it.
 
 <!-- attributions:start -->
 This project is built on other people's work — see [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
