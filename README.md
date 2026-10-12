@@ -65,7 +65,7 @@ cmake --install build      # drops the bundle into Resolume's plugin folder
 
 ## Using it
 
-**In process**: add `Cartridge` as a source, set **Core** to a libretro core
+**In process**: add `SW Cartridge` as a source, set **Core** to a libretro core
 (`.dylib` / `.dll`) and **Content** to a game. That's it.
 
 No game to hand? `python3 tools/testrom/build.py` builds a 1 KB GBA test card (animated
@@ -91,9 +91,10 @@ Set the plugin's **Source** to `Helper` and leave **Channel** at `default`.
 / Integer), **Pixel Aspect** and **Smoothing**, plus twelve pad buttons in a
 **Controller** group.
 
-The buttons are ordinary boolean parameters, which means Resolume will MIDI-map them,
+The buttons are ordinary boolean parameters, which means Resolume should MIDI-map them,
 keyboard-map them and automate them off the timeline without any help from me. A hardware
-controller becomes a joypad, and you can keyframe a game as a visual.
+controller becomes a joypad, and you can keyframe a game as a visual. Nobody's put a real
+controller on them yet, though, so that's unconfirmed (see Status).
 
 **Integer** scaling and **Smoothing** off is the combination you want for pixel art.
 **Pixel Aspect** honours the core's declared display aspect: 320×224 on a Mega Drive is a

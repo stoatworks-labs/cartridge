@@ -29,8 +29,8 @@ that come from the encoding rather than being painted on, is what this was made 
 > One thing's still unconfirmed, and it needs hardware rather than a session: **whether a
 > controller actually MIDI-maps onto the pad**. The buttons are ordinary boolean parameters, so
 > Resolume should map them like any other, but nobody has put a real controller on them. The
-> **Windows and Linux branches have never been built or tested**, and no binary is published for
-> either.
+> **Windows build ships as an x64 zip from v0.1.2 but has never been loaded into a Windows
+> host**, and the **Linux branch has never been built**, so no binary is published for it.
 >
 > This codebase was created with AI assistance, directed and reviewed by a human author.
 
@@ -55,7 +55,7 @@ latency is a cheap insurance premium against a core taking the whole show down m
 
 ## Running it
 
-**In process:** add `Cartridge` as a source, set **Core** to a libretro core (`.dylib` / `.dll`)
+**In process:** add `SW Cartridge` as a source, set **Core** to a libretro core (`.dylib` / `.dll`)
 and **Content** to a game. That's all.
 
 **Out of process:** start the helper first, then point the plugin at it:
@@ -86,9 +86,10 @@ common "why does it look wrong" complaint.
 ## The joypad
 
 Twelve pad buttons live in a **Controller** group, and they're **ordinary boolean parameters**.
-That's the whole trick: Resolume will MIDI-map them, keyboard-map them and automate them off the
+That's the whole trick: Resolume should MIDI-map them, keyboard-map them and automate them off the
 timeline with no help from this plugin. A hardware controller becomes a joypad, and a game becomes
-something you can keyframe as a visual.
+something you can keyframe as a visual. Nobody has put a real controller on them yet, though, so
+check the mapping in your own rig before a show depends on it.
 
 ---
 
